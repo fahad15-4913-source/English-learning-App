@@ -1,0 +1,49 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── User Profiles ──
+    match /users/{userId} {
+      // Users can read their own profile
+      allow read: if request.auth != null && request.auth.uid == userId;
+      // Users can create their own profile
+      allow create: if request.auth != null && request.auth.uid == userId;
+      // Users can update their own profile
+      allow update: if request.auth != null && request.auth.uid == userId;
+
+      // Vocabulary sub-collection
+      match /vocabulary/{wordId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+
+      // Progress sub-collection
+      match /progress/{progressId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+    }
+
+    // ── Leaderboard (public read) ──
+    match /users/{userId} {
+      allow read: if request.auth != null;
+    }
+
+    // ── Lessons (public read, admin write) ──
+    match /lessons/{lessonId} {
+      allow read: if request.auth != null;
+      allow write: if false; // Only admin SDK / Cloud Functions
+    }
+
+    // ── Learning Paths ──
+    match /learning_paths/{pathId} {
+      allow read: if request.auth != null;
+      allow write: if false;
+    }
+
+    // ── Achievements ──
+    match /achievements/{achievementId} {
+      allow read: if request.auth != null;
+      allow write: if false;
+    }
+  }
+}
